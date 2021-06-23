@@ -1,0 +1,39 @@
+.bg-light-info {
+    background-color: #edf7fc;
+}
+
+/* Task List */
+#task-list {
+    max-height: 317px;
+    overflow: auto;
+}
+
+/* DatePicker Styling */
+.react-datepicker-wrapper {
+    display: block;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
+}
+.react-datepicker__input-container {
+    display: block;
+}
+.react-datepicker__input-container > input {
+    border-radius: 0 0.2rem 0.2rem 0;
+    width: 100%;
+    height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.react-datepicker__input-container > input:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+}
