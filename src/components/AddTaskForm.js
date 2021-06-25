@@ -35,6 +35,7 @@ const AddTaskForm = () => {
             onTime.getHours() * 3600 +
             onTime.getMinutes() * 60 +
             onTime.getSeconds();
+        console.log(timeInSeconds);
         const task = {
             assigned_user: userId,
             task_date: moment(onDate).format("YYYY-MM-DD"),

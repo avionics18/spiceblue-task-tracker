@@ -32,10 +32,14 @@ const EditTaskForm = () => {
     const [userId, setUserId] = useState(taskToEdit.user_id);
     const [onDate, setOnDate] = useState(new Date(taskToEdit.task_date));
     // converting time back to date string
-    const toDateTime = moment(new Date(taskToEdit.task_date))
-        .add(taskToEdit.task_time, "seconds")
-        .toString();
-    const [onTime, setOnTime] = useState(new Date(toDateTime));
+    const toDateTime = moment({
+        hour: 0,
+        minute: 0,
+        seconds: 0,
+        milliseconds: 0,
+    }).add(taskToEdit.task_time, "seconds");
+    const toDateTimeString = toDateTime.toString();
+    const [onTime, setOnTime] = useState(new Date(toDateTimeString));
 
     const showTaskAndEmptyEditTaskHandler = () => {
         dispatch(toggleForm());
