@@ -1,27 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
     toggleForm,
-    updateTask,
     emptyTaskToEdit,
-    deleteTask,
+    updateTaskAsync,
+    toggleIsLoading,
+    deleteTaskAsync,
 } from "../redux/taskSlice";
+import { getUsersAsync } from "../redux/userSlice";
 import DatePicker from "react-datepicker";
 import { BiCalendar, BiTimeFive, BiTrash } from "react-icons/bi";
+import ReactTooltip from "react-tooltip";
+import moment from "moment";
 
 import "react-datepicker/dist/react-datepicker.css";
 
 const EditTaskForm = () => {
-    const { taskToEdit } = useSelector((state) => state.tasks);
-
-    const [desc, setDesc] = useState(taskToEdit.desc);
-    const [user, setUser] = useState(taskToEdit.user);
-    const [onDate, setOnDate] = useState(new Date(taskToEdit.onDate));
-    const [onTime, setOnTime] = useState(new Date(taskToEdit.onTime));
-
     const dispatch = useDispatch();
 
-    const showTaskAndNoEditTaskHandler = () => {
+    // ------ taskToEdit -------
+    const { taskToEdit } = useSelector((state) => state.tasks);
+    // ------ Users ---------
+    const users = useSelector((state) => state.users);
+
+    useEffect(() => {
+        dispatch(getUsersAsync());
+    }, [dispatch]);
+    // ----------------------
+
+    const [desc, setDesc] = useState(taskToEdit.task_msg);
+    const [userId, setUserId] = useState(taskToEdit.user_id);
+    const [onDate, setOnDate] = useState(new Date(taskToEdit.task_date));
+    // converting time back to date string
+    const toDateTime = moment(new Date(taskToEdit.task_date))
+        .add(taskToEdit.task_time, "seconds")
+        .toString();
+    const [onTime, setOnTime] = useState(new Date(toDateTime));
+
+    const showTaskAndEmptyEditTaskHandler = () => {
         dispatch(toggleForm());
         dispatch(emptyTaskToEdit());
     };
@@ -29,24 +45,42 @@ const EditTaskForm = () => {
     const onSubmitHandler = (e) => {
         e.preventDefault();
         // form validation remains
-        const updatedTask = {
-            id: taskToEdit.id,
-            desc,
-            user,
-            onDate: onDate.toString(),
-            onTime: onTime.toString(),
+        let timeInSeconds =
+            onTime.getHours() * 3600 +
+            onTime.getMinutes() * 60 +
+            onTime.getSeconds();
+        const task = {
+            assigned_user: userId,
+            task_date: moment(onDate).format("YYYY-MM-DD"),
+            task_time: timeInSeconds,
+            is_completed: 0,
+            time_zone: onDate.getTimezoneOffset() * -60,
+            task_msg: desc,
         };
-        dispatch(updateTask(updatedTask));
+        // dispatch addTaskAsync and then only show all tasks
+        // till tehnshow loading animation
+        dispatch(toggleIsLoading());
+        dispatch(updateTaskAsync({ task, id: taskToEdit.id })).then(() => {
+            dispatch(toggleIsLoading());
+            showTaskAndEmptyEditTaskHandler();
+        });
         setDesc("");
-        setUser("");
+        setUserId("");
         setOnDate(null);
         setOnTime(null);
-        showTaskAndNoEditTaskHandler();
     };
 
     const deleteTaskHandler = () => {
-        dispatch(deleteTask({ id: taskToEdit.id }));
-        showTaskAndNoEditTaskHandler();
+        const ans = window.confirm(
+            "Are you sure you want to delete this Task?"
+        );
+        if (ans) {
+            dispatch(toggleIsLoading());
+            dispatch(deleteTaskAsync({ id: taskToEdit.id })).then(() => {
+                dispatch(toggleIsLoading());
+                showTaskAndEmptyEditTaskHandler();
+            });
+        }
     };
 
     return (
@@ -115,15 +149,15 @@ const EditTaskForm = () => {
                         <select
                             className="custom-select custom-select-sm"
                             id="user"
-                            value={user}
-                            onChange={(e) => setUser(e.target.value)}
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
                         >
                             <option value="">Choose...</option>
-                            <option value="Prateek">Prateek</option>
-                            <option value="Anvita">Anvita</option>
-                            <option value="Sabeel">Sabeel</option>
-                            <option value="Karthik">Karthik</option>
-                            <option value="Shamita">Shamita</option>
+                            {users.map((u) => (
+                                <option value={u.user_id} key={u.user_id}>
+                                    {u.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -134,15 +168,24 @@ const EditTaskForm = () => {
                                 className="btn btn-light border"
                                 type="button"
                                 onClick={deleteTaskHandler}
+                                data-tip
+                                data-for="deletingTask"
                             >
                                 <BiTrash />
                             </button>
+                            <ReactTooltip
+                                id="deletingTask"
+                                type="dark"
+                                effect="solid"
+                            >
+                                <span>Delete Task</span>
+                            </ReactTooltip>
                         </div>
                         <div>
                             <button
                                 type="button"
                                 className="btn btn-light"
-                                onClick={showTaskAndNoEditTaskHandler}
+                                onClick={showTaskAndEmptyEditTaskHandler}
                             >
                                 Cancel
                             </button>{" "}

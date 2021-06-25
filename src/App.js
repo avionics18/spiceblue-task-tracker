@@ -6,12 +6,15 @@ import Header from "./components/Header";
 import AddTaskForm from "./components/AddTaskForm";
 import EditTaskForm from "./components/EditTaskForm";
 import TaskList from "./components/TaskList";
+import Loading from "./ui/Loading";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./style.css";
 
 const App = () => {
-    const { showTaskForm, taskToEdit } = useSelector((state) => state.tasks);
+    const { showTaskForm, taskToEdit, isLoading } = useSelector(
+        (state) => state.tasks
+    );
 
     return (
         <Card>
@@ -26,6 +29,7 @@ const App = () => {
                 ) : (
                     <TaskList />
                 )}
+                {isLoading ? <Loading /> : null}
             </CardBody>
         </Card>
     );

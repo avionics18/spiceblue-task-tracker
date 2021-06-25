@@ -1,19 +1,28 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { addTask, toggleForm } from "../redux/taskSlice";
-import { v4 as uuid } from "uuid";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { toggleForm, addTaskAsync, toggleIsLoading } from "../redux/taskSlice";
+import { getUsersAsync } from "../redux/userSlice";
 import DatePicker from "react-datepicker";
+import moment from "moment";
 import { BiCalendar, BiTimeFive } from "react-icons/bi";
 
 import "react-datepicker/dist/react-datepicker.css";
 
 const AddTaskForm = () => {
     const [desc, setDesc] = useState("");
-    const [user, setUser] = useState("");
+    const [userId, setUserId] = useState("");
     const [onDate, setOnDate] = useState(null);
     const [onTime, setOnTime] = useState(null);
 
     const dispatch = useDispatch();
+
+    // ------ Users ---------
+    const users = useSelector((state) => state.users);
+
+    useEffect(() => {
+        dispatch(getUsersAsync());
+    }, [dispatch]);
+    // ----------------------
 
     const showTaskHandler = () => {
         dispatch(toggleForm());
@@ -22,19 +31,29 @@ const AddTaskForm = () => {
     const onSubmitHandler = (e) => {
         e.preventDefault();
         // form validation remains
-        const newTask = {
-            id: uuid(),
-            desc,
-            user,
-            onDate: onDate.toString(),
-            onTime: onTime.toString(),
+        let timeInSeconds =
+            onTime.getHours() * 3600 +
+            onTime.getMinutes() * 60 +
+            onTime.getSeconds();
+        const task = {
+            assigned_user: userId,
+            task_date: moment(onDate).format("YYYY-MM-DD"),
+            task_time: timeInSeconds,
+            is_completed: 0,
+            time_zone: onDate.getTimezoneOffset() * -60,
+            task_msg: desc,
         };
-        dispatch(addTask(newTask));
+        // dispatch addTaskAsync and then only show all tasks
+        // till tehnshow loading animation
+        dispatch(toggleIsLoading());
+        dispatch(addTaskAsync({ task })).then(() => {
+            dispatch(toggleIsLoading());
+            showTaskHandler();
+        });
         setDesc("");
-        setUser("");
+        setUserId("");
         setOnDate(null);
         setOnTime(null);
-        showTaskHandler();
     };
 
     return (
@@ -103,15 +122,15 @@ const AddTaskForm = () => {
                         <select
                             className="custom-select custom-select-sm"
                             id="user"
-                            value={user}
-                            onChange={(e) => setUser(e.target.value)}
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
                         >
                             <option value="">Choose...</option>
-                            <option value="Prateek">Prateek</option>
-                            <option value="Anvita">Anvita</option>
-                            <option value="Sabeel">Sabeel</option>
-                            <option value="Karthik">Karthik</option>
-                            <option value="Shamita">Shamita</option>
+                            {users.map((u) => (
+                                <option value={u.user_id} key={u.user_id}>
+                                    {u.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>

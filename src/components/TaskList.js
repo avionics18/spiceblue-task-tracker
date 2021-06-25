@@ -1,12 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import TaskItem from "./TaskItem";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { getTasksAsync, toggleIsLoading } from "../redux/taskSlice";
 
 const TaskList = () => {
+    const dispatch = useDispatch();
+    useEffect(() => {
+        // show loading till all tasks are fetched
+        dispatch(toggleIsLoading());
+        dispatch(getTasksAsync()).then(() => dispatch(toggleIsLoading()));
+    }, [dispatch]);
     const { allTasks } = useSelector((state) => state.tasks);
 
     let taskItems;
-    if (allTasks.length) {
+    if (allTasks && allTasks.length) {
         taskItems = allTasks.map((task) => {
             return <TaskItem key={task.id} task={task} />;
         });
